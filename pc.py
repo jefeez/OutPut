@@ -9,7 +9,7 @@ def receive_and_play_audio(listen_ip, listen_port):
     rate = 44100
 
     p = pyaudio.PyAudio()
-    stream = p.open(channels=channels,
+    stream = p.open(format=format, channels=channels,
                     rate=rate,
                     output=True,
                     frames_per_buffer=chunk)
