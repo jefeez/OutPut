@@ -1,44 +1,48 @@
-import socket
 import pyaudio
+import socket
 
+# Configurações do servidor de escuta
+HOST = '0.0.0.0'  # Todos os interfaces
+PORT = 12345
 
-def receive_and_play_audio(listen_ip, listen_port):
-    chunk = 1024
-    format = pyaudio.paInt16
-    channels = 1
-    rate = 44100
+# Configuração do PyAudio
+CHUNK = 1024
+FORMAT = pyaudio.paInt16
+CHANNELS = 1
+RATE = 44100
 
-    p = pyaudio.PyAudio()
-    stream = p.open(format=format, channels=channels,
-                    rate=rate,
-                    output=True,
-                    frames_per_buffer=chunk)
-    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_socket.bind((listen_ip, listen_port))
-    server_socket.listen(1)
-    print("WAIT CONNECTION....")
+# Inicializar PyAudio
+audio = pyaudio.PyAudio()
 
-    conn, addr = server_socket.accept()
-    print(f"CONNECT BY {addr}")
+# Criar um socket TCP/IP
+server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server_socket.bind((HOST, PORT))
+server_socket.listen(1)
 
-    try:
-        while True:
-            data = conn.recv(chunk)
-            if not data:
-                break
-            stream.write(data)
-    except Exception as e:
-        print(f"Error during reception/playback: {e}")
-    finally:
-        print("Terminating audio reception.")
-        stream.stop_stream()
-        stream.close()
-        p.terminate()
-        conn.close()
-        server_socket.close()
+print(f"Listening on {HOST}:{PORT}...")
 
+# Aguardar conexão do cliente (seu dispositivo móvel)
+client_socket, addr = server_socket.accept()
+print(f"Connected by {addr}")
 
-if __name__ == '__main__':
-    listen_ip = '0.0.0.0'
-    listen_port = 5000
-    receive_and_play_audio(listen_ip, listen_port)
+# Abrir stream de entrada do PyAudio
+stream = audio.open(format=FORMAT, channels=CHANNELS,
+                    rate=RATE, input=True, frames_per_buffer=CHUNK)
+
+print("Capturing audio...")
+
+try:
+    while True:
+        # Ler dados do stream de entrada
+        data = stream.read(CHUNK)
+        # Enviar dados capturados para o cliente (se necessário)
+        client_socket.sendall(data)
+except KeyboardInterrupt:
+    print("Interrupted")
+finally:
+    # Fechar conexões e stream de áudio
+    stream.stop_stream()
+    stream.close()
+    audio.terminate()
+    client_socket.close()
+    server_socket.close()

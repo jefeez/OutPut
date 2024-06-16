@@ -35,6 +35,6 @@ def capture_and_send_audio(client_ip, client_port):
 
 
 if __name__ == "__main__":
-    client_ip = '192.168.66.174'
-    client_port = 5000
+    client_ip = '192.168.103'
+    client_port = 8125
     capture_and_send_audio(client_ip, client_port)
